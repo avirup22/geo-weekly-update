@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GEO-OS Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B4F9E;
+    --navy-dark:#073A76;
+    --cyan:#17B9E6;
+    --grey:#8B95A1;
+    --green:#1F9D6B;
+    --amber:#E8960C;
+    --amber-tint:#FDF1DD;
+    --pink:#F5067B;
+    --grey-light:#F4F6F9;
+    --zebra:#FAFBFC;
+    --grid:#E6E9EF;
+    --text-muted:#6B7280;
+    --white:#FFFFFF;
+    --wf-tint:#F1F2F5;
+    --dev-tint:#EAF1FB;
+    --test-tint:#E7F8FC;
+    --done-tint:#E7F6EF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:var(--white);
+    color:var(--navy-dark);
+    -webkit-font-smoothing:antialiased;
+    padding:26px 30px 40px;
+  }
+  .wrap{max-width:1340px;margin:0 auto;}
+
+  /* ---------- header ---------- */
+  .header-row{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:18px;}
+  h1{font-size:26px;font-weight:900;color:var(--navy);margin:0 0 3px;letter-spacing:-0.3px;}
+  .subtitle{font-size:12.5px;color:var(--text-muted);margin:0;}
+  .progress-hero{display:flex;align-items:center;gap:14px;}
+  .ring{position:relative;width:56px;height:56px;flex-shrink:0;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--navy-dark);}
+  .progress-text .big{font-size:14px;font-weight:800;color:var(--navy-dark);}
+  .progress-text .small{font-size:11px;color:var(--text-muted);}
+
+  /* ---------- control bar ---------- */
+  .controls{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    background:var(--grey-light);border-radius:12px;padding:10px 12px;margin-bottom:8px;
+  }
+  .ctrl-group{display:flex;align-items:center;gap:8px;}
+  .ctrl-label{font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;}
+  .segmented{display:flex;background:var(--white);border-radius:9px;padding:3px;box-shadow:inset 0 0 0 1px var(--grid);}
+  .seg-btn{
+    font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:700;color:var(--text-muted);
+    background:transparent;border:none;padding:6px 13px;border-radius:7px;cursor:pointer;white-space:nowrap;
+    transition:background .12s ease,color .12s ease;display:flex;align-items:center;gap:6px;
+  }
+  .seg-btn.active{background:var(--navy);color:var(--white);}
+  .seg-btn .cnt{font-size:10.5px;font-weight:800;opacity:.75;}
+  .seg-btn.active .cnt{opacity:.9;}
+  .sprint-seg .seg-btn{padding:6px 12px;min-width:34px;justify-content:center;}
+  .sprint-seg .seg-btn.active{background:var(--pink);color:#fff;}
+  .spacer{margin-left:auto;}
+  button.mini{
+    font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--navy);
+    background:var(--white);border:1.5px solid var(--grid);border-radius:8px;padding:6px 11px;cursor:pointer;
+  }
+  button.mini:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  /* ---------- legend ---------- */
+  .legend{display:flex;align-items:center;gap:18px;margin:12px 2px 14px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--navy-dark);font-weight:600;}
+  .swatch{width:13px;height:13px;border-radius:4px;display:inline-block;}
+  .legend-hint{font-size:11px;color:var(--text-muted);font-style:italic;margin-left:auto;}
+
+  /* ================= ROADMAP ================= */
+  .roadmap-scroll{overflow-x:auto;border:1px solid var(--grid);border-radius:12px;}
+  table.roadmap{border-collapse:collapse;width:100%;min-width:720px;}
+  table.roadmap th{
+    background:var(--grey-light);font-size:11px;font-weight:800;color:var(--navy-dark);
+    padding:11px 8px;text-align:center;border-bottom:1px solid var(--grid);position:relative;white-space:nowrap;
+  }
+  table.roadmap th.label-col{
+    text-align:left;padding-left:16px;position:sticky;left:0;background:var(--grey-light);z-index:4;
+    min-width:230px;border-right:1px solid var(--grid);
+  }
+  th.focus-col, td.focus-col{background:#FDEEF5 !important;}
+  .focus-tag{
+    position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+    background:var(--pink);color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:5px;letter-spacing:.4px;
+  }
+  /* track group header */
+  tr.track-head td{
+    background:var(--white);border-bottom:1px solid var(--grid);padding:12px 8px 10px;
+  }
+  tr.track-head td.label-col{position:sticky;left:0;z-index:3;background:var(--white);border-right:1px solid var(--grid);padding-left:16px;}
+  .track-head-inner{display:flex;align-items:center;gap:10px;}
+  .track-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .track-name{font-size:13.5px;font-weight:900;color:var(--navy-dark);}
+  .track-meta{font-size:10.5px;color:var(--text-muted);font-weight:700;}
+  .track-progress{display:flex;align-items:center;gap:8px;}
+  .tp-bar{width:120px;height:8px;border-radius:5px;overflow:hidden;display:flex;background:var(--grid);}
+  .tp-seg{height:100%;}
+  .tp-pct{font-size:11px;font-weight:800;color:var(--green);}
+
+  tbody.track-body tr td{border-bottom:1px solid var(--grid);padding:5px 6px;text-align:center;vertical-align:middle;}
+  tbody.track-body tr:nth-child(even) td{background:var(--zebra);}
+  td.label-col{
+    position:sticky;left:0;z-index:2;background:var(--white);border-right:1px solid var(--grid);
+    text-align:left;padding:0 8px 0 26px;
+  }
+  tbody.track-body tr:nth-child(even) td.label-col{background:var(--zebra);}
+  .feat-row{display:flex;align-items:center;gap:6px;min-height:40px;}
+  .feat-name{
+    font-size:12.5px;font-weight:700;color:var(--navy-dark);border:none;background:transparent;
+    font-family:'Nunito',sans-serif;padding:4px;border-radius:6px;flex:1;min-width:0;
+  }
+  .feat-name:focus{outline:2px solid var(--cyan);background:var(--white);}
+  .remove-feat{
+    border:none;background:transparent;color:var(--grid);cursor:pointer;font-size:14px;line-height:1;
+    padding:2px 4px;border-radius:4px;visibility:hidden;
+  }
+  .feat-row:hover .remove-feat{visibility:visible;color:var(--text-muted);}
+  .remove-feat:hover{color:var(--pink);background:var(--grey-light);}
+  .cell-wrap{position:relative;display:flex;justify-content:center;}
+  .cell{
+    width:38px;height:30px;border-radius:7px;cursor:pointer;
+    border:1px solid transparent;transition:transform .08s ease;
+  }
+  .cell:hover{transform:scale(1.1);border-color:rgba(0,0,0,.1);}
+  .cell.s0{background:var(--white);border:1.5px dashed var(--grid);}
+  .cell.s1{background:var(--grey);}
+  .cell.s2{background:var(--navy);}
+  .cell.s3{background:var(--cyan);}
+  .cell.s4{background:var(--green);}
+  .cell.amber{background:var(--amber) !important;}
+  .slip-btn{
+    position:absolute;top:-6px;right:-2px;width:16px;height:16px;border-radius:50%;
+    background:var(--amber);color:#fff;border:1.5px solid #fff;font-size:9px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;
+    transition:opacity .1s ease;box-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+  .cell-wrap:hover .slip-btn{opacity:1;}
+  .slip-btn:hover{background:#C97D08;}
+  .add-feat-row td{padding:8px 8px 8px 26px !important;text-align:left !important;background:var(--white) !important;}
+  .add-feat-btn{
+    font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--text-muted);
+    background:transparent;border:1.5px dashed var(--grid);border-radius:8px;padding:6px 12px;cursor:pointer;
+  }
+  .add-feat-btn:hover{color:var(--navy);border-color:var(--navy);}
+
+  /* ================= BOARD ================= */
+  .board-head{font-size:13px;font-weight:800;color:var(--navy-dark);margin:2px 2px 12px;}
+  .board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start;}
+  .col{border-radius:14px;padding:16px;min-height:120px;transition:background .12s ease, box-shadow .12s ease;}
+  .col.drag-over{box-shadow:inset 0 0 0 2px var(--navy);background:#E4EDF9;}
+  .col.c1{background:var(--wf-tint);}
+  .col.c2{background:var(--dev-tint);}
+  .col.c3{background:var(--test-tint);}
+  .col.c4{background:var(--done-tint);}
+  .col-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .icon-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .icon-circle svg{width:16px;height:16px;color:#fff;}
+  .col-title{font-size:13px;font-weight:800;color:var(--navy-dark);flex:1;}
+  .col-count{font-size:10.5px;font-weight:800;color:#fff;border-radius:999px;padding:2px 8px;min-width:20px;text-align:center;}
+  .feat-card{
+    background:var(--white);border-radius:9px;padding:10px 11px;margin-bottom:9px;cursor:grab;
+    box-shadow:0 1px 2px rgba(11,79,158,.09);border-left:3px solid transparent;
+    transition:transform .08s ease, box-shadow .08s ease, opacity .12s ease;
+  }
+  .feat-card:active{cursor:grabbing;}
+  .feat-card.dragging{opacity:.4;}
+  .feat-card:hover{transform:translateY(-1px);box-shadow:0 3px 9px rgba(11,79,158,.17);}
+  .fc-top{display:flex;align-items:center;gap:8px;}
+  .fc-name{font-size:12.5px;font-weight:700;color:var(--navy-dark);flex:1;}
+  .fc-adv{font-size:10px;color:var(--text-muted);opacity:0;transition:opacity .1s;}
+  .feat-card:hover .fc-adv{opacity:1;}
+  .feat-card.amber-card{border-left-color:var(--amber) !important;background:var(--amber-tint);}
+  .fc-tags{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .fc-track{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.2px;}
+  .fc-slipped-tag{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.2px;background:var(--amber);color:#fff;}
+  .fc-slip-btn{
+    font-size:9.5px;font-weight:800;color:var(--amber);background:transparent;border:1.5px solid var(--amber);
+    border-radius:999px;padding:2px 8px;cursor:pointer;opacity:0;transition:opacity .1s ease;
+  }
+  .feat-card:hover .fc-slip-btn{opacity:1;}
+  .fc-slip-btn:hover{background:var(--amber);color:#fff;}
+  .col-empty{font-size:11.5px;color:var(--text-muted);font-style:italic;padding:4px 2px;}
+
+  .unscheduled{margin-top:18px;padding:13px 15px;background:var(--grey-light);border-radius:11px;}
+  .unsched-title{font-size:11.5px;font-weight:800;color:var(--navy-dark);margin-bottom:9px;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    display:flex;align-items:center;gap:7px;background:var(--white);border:1px solid var(--grid);
+    border-radius:999px;padding:4px 5px 4px 11px;font-size:11.5px;color:var(--navy-dark);font-weight:600;cursor:grab;
+  }
+  .chip.dragging{opacity:.4;}
+  .chip .chip-dot{width:7px;height:7px;border-radius:50%;}
+  .chip button{
+    border:none;background:var(--navy);color:#fff;width:18px;height:18px;border-radius:50%;
+    font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .chip button:hover{background:var(--navy-dark);}
+  .all-sched{font-size:11.5px;color:var(--text-muted);font-style:italic;}
+
+  footer{display:flex;align-items:center;gap:14px;margin-top:24px;}
+  footer img{height:18px;}
+  footer .foot-note{font-size:10px;color:var(--text-muted);font-style:italic;}
+  .empty-state{padding:34px;text-align:center;color:var(--text-muted);font-size:13px;border:1px solid var(--grid);border-radius:12px;}
+
+  @media (max-width:920px){ .board{grid-template-columns:1fr 1fr;} }
+  @media (max-width:640px){
+    body{padding:16px;}
+    h1{font-size:21px;}
+    .board{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header-row">
+    <div>
+      <h1>GEO-OS Tracker</h1>
+      <p class="subtitle">6-sprint program &middot; GEO GPS &middot; GEO Craft &middot; Knowledge Graph</p>
+    </div>
+    <div class="progress-hero">
+      <div class="ring" id="ring"></div>
+      <div class="progress-text">
+        <div class="big" id="progressBig">—</div>
+        <div class="small" id="progressSmall">shipped across GEO-OS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Track</span>
+      <div class="segmented" id="trackSeg"></div>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">View</span>
+      <div class="segmented" id="viewSeg">
+        <button class="seg-btn" data-view="roadmap" id="viewRoadmap">Roadmap</button>
+        <button class="seg-btn" data-view="board" id="viewBoard">Board</button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label" id="sprintLabel">Sprint</span>
+      <div class="segmented sprint-seg" id="sprintSeg"></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="mini" id="addSprintBtn">+ Sprint</button>
+    <button class="mini" id="addTrackBtn">+ Track</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="background:var(--grey)"></span>Wireframe</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--navy)"></span>Development</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--cyan)"></span>Testing</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--green)"></span>Done</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--amber)"></span>Slipped</div>
+    <div class="legend-hint" id="legendHint"></div>
+  </div>
+
+  <div id="content"></div>
+
+  <footer>
+    <img src="data:image/png;base64,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" alt="Indegene">
+    <span class="foot-note">Auto-saves &middot; click any cell or card to move its stage &middot; filter by track, switch views, pick a sprint.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = "geo-os-tracker:v3";
+  const STAGE_NAMES = ["Not scheduled","Wireframe","Development","Testing","Done"];
+  const STAGE_VARS  = {1:"var(--grey)",2:"var(--navy)",3:"var(--cyan)",4:"var(--green)"};
+  const TRACK_DOTS  = ["#0B4F9E","#F5067B","#17B9E6","#1F9D6B","#8B5CF6","#F59E0B"];
+
+  const ICONS = {
+    1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 3"/><line x1="4" y1="4" x2="20" y2="20"/></svg>',
+    2:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 3 12 9 18"/><polyline points="15 6 21 12 15 18"/></svg>',
+    3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v6.5L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9.5V3"/><line x1="7.5" y1="15" x2="16.5" y2="15"/></svg>',
+    4:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  };
+
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+
+  function defaultState(){
+    const tracks = [
+      {id:"gps", name:"GEO GPS"},
+      {id:"craft", name:"GEO Craft"},
+      {id:"kg", name:"Knowledge Graph"},
+    ];
+    const defs = {
+      gps: [
+        ["Visibility Scanner",        [1,2,2,3,4,0]],
+        ["Citation Tracker",          [1,1,2,2,3,4]],
+        ["Answer Share Monitor",      [0,1,2,2,3,3]],
+        ["Prompt Coverage Map",       [2,2,3,4,0,0]],
+        ["Competitor Position Radar", [0,0,1,1,2,3]],
+      ],
+      craft: [
+        ["Prompt Template Library",   [1,2,2,3,4,0]],
+        ["Persona Builder",           [0,1,1,2,2,3]],
+        ["Content Scoring Engine",    [1,1,2,2,3,4]],
+        ["Brand Voice Calibrator",    [0,0,1,1,2,2]],
+        ["Answer Draft Generator",    [2,2,3,3,4,0]],
+      ],
+      kg: [
+        ["Entity Extraction Pipeline",[1,1,2,2,3,4]],
+        ["Ontology Mapping",          [1,2,2,3,4,0]],
+        ["Relationship Inference",    [0,1,1,2,2,3]],
+        ["Source Ingestion Connectors",[2,2,3,4,0,0]],
+        ["Graph Query API",           [0,0,1,2,2,3]],
+      ],
+    };
+    const features = [];
+    const cells = {};
+    tracks.forEach(t=>{
+      defs[t.id].forEach(([name, segs])=>{
+        const fid = uid();
+        features.push({id:fid, trackId:t.id, name});
+        segs.forEach((v,si)=>{ if(v>0) cells[fid+"|"+si]=v; });
+      });
+    });
+    return {
+      sprintCount:6,
+      selectedSprint:3,
+      view:"roadmap",
+      activeTrack:"all",
+      tracks,
+      features,
+      cells,
+    };
+  }
+
+  let state=null;
+
+  async function loadState(){
+    try{ const r=await window.storage.get(STORAGE_KEY,false); return r&&r.value?JSON.parse(r.value):null; }
+    catch(e){ return null; }
+  }
+  async function saveState(){
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+    catch(e){ console.error("save failed", e); }
+  }
+
+  function trackName(id){ const t=state.tracks.find(t=>t.id===id); return t?t.name:"—"; }
+  function trackColor(id){ const i=state.tracks.findIndex(t=>t.id===id); return TRACK_DOTS[i%TRACK_DOTS.length]; }
+  function featuresOf(trackId){ return state.features.filter(f=>f.trackId===trackId); }
+  function visibleTracks(){ return state.activeTrack==="all" ? state.tracks : state.tracks.filter(t=>t.id===state.activeTrack); }
+
+  function getCell(fid, si){
+    const raw = state.cells[fid+"|"+si];
+    if(raw==null) return {s:0, a:false};
+    if(typeof raw === 'number') return {s:raw, a:false}; // legacy format
+    return {s:raw.s||0, a:!!raw.a};
+  }
+  function setCell(fid, si, s, amber){
+    const key=fid+"|"+si;
+    if(s===0){ delete state.cells[key]; }
+    else { state.cells[key] = {s, a: !!amber}; }
+  }
+  function featureDone(fid){
+    // "done" once it reaches stage 4 in any sprint
+    for(let si=0; si<state.sprintCount; si++){ if(getCell(fid,si).s===4) return true; }
+    return false;
+  }
+  function stageInSprint(fid, si){ return getCell(fid,si).s; }
+  function isSlipped(fid, si){ return getCell(fid,si).a; }
+
+  function countsForSprint(featureList, si){
+    const c={1:0,2:0,3:0,4:0};
+    featureList.forEach(f=>{ const v=stageInSprint(f.id,si); if(v) c[v]++; });
+    return c;
+  }
+
+  // ---------- mutations ----------
+  function cycleStage(fid, si){
+    const cur=getCell(fid,si).s;
+    const next=(cur+1)%5;
+    setCell(fid, si, next, false); // manual click always clears any slip flag
+    saveState(); render();
+  }
+  function setStage(fid, si, stage){
+    setCell(fid, si, stage, false);
+    saveState(); render();
+  }
+  function slipToNextSprint(fid, si){
+    const cur = getCell(fid, si);
+    if(cur.s===0) return; // nothing scheduled here to slip
+    if(si >= state.sprintCount-1){ state.sprintCount++; } // auto-extend timeline if slipping past the last sprint
+    const target = getCell(fid, si+1);
+    const carriedStage = Math.max(cur.s, target.s || 0);
+    setCell(fid, si+1, carriedStage, true);   // land amber on the new sprint
+    setCell(fid, si, 0, false);               // clear the original slot
+    saveState(); render();
+  }
+  function renameFeature(fid, name){
+    const f=state.features.find(f=>f.id===fid); if(f){ f.name=name; saveState(); }
+  }
+  function addFeature(trackId){
+    state.features.push({id:uid(), trackId, name:"New feature"});
+    saveState(); render();
+  }
+  function removeFeature(fid){
+    state.features=state.features.filter(f=>f.id!==fid);
+    Object.keys(state.cells).forEach(k=>{ if(k.startsWith(fid+"|")) delete state.cells[k]; });
+    saveState(); render();
+  }
+  function addSprint(){ state.sprintCount++; saveState(); render(); }
+  function addTrack(){
+    const name=window.prompt('New track name (e.g. "GEO Signals")');
+    if(!name||!name.trim()) return;
+    const id=name.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_')+'_'+uid();
+    state.tracks.push({id, name:name.trim()});
+    state.activeTrack=id;
+    saveState(); render();
+  }
+  function removeTrack(id){
+    const t=state.tracks.find(t=>t.id===id);
+    if(!confirm(`Remove track "${t.name}" and its features?`)) return;
+    state.tracks=state.tracks.filter(t=>t.id!==id);
+    const fids=state.features.filter(f=>f.trackId===id).map(f=>f.id);
+    state.features=state.features.filter(f=>f.trackId!==id);
+    fids.forEach(fid=>Object.keys(state.cells).forEach(k=>{ if(k.startsWith(fid+"|")) delete state.cells[k]; }));
+    if(state.activeTrack===id) state.activeTrack="all";
+    saveState(); render();
+  }
+
+  // ---------- controls ----------
+  function renderTrackSeg(){
+    const seg=document.getElementById('trackSeg');
+    seg.innerHTML="";
+    const mk=(id,label,count)=>{
+      const b=document.createElement('button');
+      b.className='seg-btn'+(state.activeTrack===id?' active':'');
+      b.innerHTML=`${label} <span class="cnt">${count}</span>`;
+      b.onclick=()=>{ state.activeTrack=id; saveState(); render(); };
+      return b;
+    };
+    seg.appendChild(mk("all","All", state.features.length));
+    state.tracks.forEach(t=>seg.appendChild(mk(t.id, t.name, featuresOf(t.id).length)));
+  }
+
+  function renderViewSeg(){
+    document.getElementById('viewRoadmap').className='seg-btn'+(state.view==='roadmap'?' active':'');
+    document.getElementById('viewBoard').className='seg-btn'+(state.view==='board'?' active':'');
+    document.getElementById('viewRoadmap').onclick=()=>{ state.view='roadmap'; saveState(); render(); };
+    document.getElementById('viewBoard').onclick=()=>{ state.view='board'; saveState(); render(); };
+  }
+
+  function renderSprintSeg(){
+    const seg=document.getElementById('sprintSeg');
+    seg.innerHTML="";
+    for(let i=0;i<state.sprintCount;i++){
+      const b=document.createElement('button');
+      b.className='seg-btn'+(state.selectedSprint===i?' active':'');
+      b.textContent=(i+1);
+      b.onclick=()=>{ state.selectedSprint=i; saveState(); render(); };
+      seg.appendChild(b);
+    }
+    document.getElementById('sprintLabel').textContent = state.view==='board' ? 'Sprint (board)' : 'Focus sprint';
+  }
+
+  function renderProgress(){
+    const total=state.features.length;
+    const done=state.features.filter(f=>featureDone(f.id)).length;
+    const pct= total? Math.round(done/total*100):0;
+    const R=24, C=2*Math.PI*R, off=C*(1-pct/100);
+    document.getElementById('ring').innerHTML=
+      `<svg width="56" height="56" viewBox="0 0 56 56">
+        <circle cx="28" cy="28" r="${R}" fill="none" stroke="var(--grid)" stroke-width="6"/>
+        <circle cx="28" cy="28" r="${R}" fill="none" stroke="var(--green)" stroke-width="6"
+          stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
+      </svg><div class="pct">${pct}%</div>`;
+    document.getElementById('progressBig').textContent=`${done} of ${total} features shipped`;
+  }
+
+  function renderLegendHint(){
+    const el=document.getElementById('legendHint');
+    el.textContent = state.view==='roadmap'
+      ? 'Click a cell to move it Wireframe → Development → Testing → Done'
+      : 'Drag a card into a column, or click it to advance a stage';
+  }
+
+  // ---------- roadmap ----------
+  function renderRoadmap(){
+    const wrap=document.getElementById('content');
+    const tracks=visibleTracks();
+    if(tracks.length===0 || state.features.length===0){
+      wrap.innerHTML='<div class="empty-state">No features yet — pick a track and add one.</div>';
+      return;
+    }
+    const scroll=document.createElement('div');
+    scroll.className='roadmap-scroll';
+    const table=document.createElement('table');
+    table.className='roadmap';
+
+    // header
+    const thead=document.createElement('thead');
+    const hr=document.createElement('tr');
+    const lth=document.createElement('th');
+    lth.className='label-col'; lth.textContent='Feature';
+    hr.appendChild(lth);
+    for(let si=0; si<state.sprintCount; si++){
+      const th=document.createElement('th');
+      if(si===state.selectedSprint) th.classList.add('focus-col');
+      th.textContent='S'+(si+1);
+      if(si===state.selectedSprint){
+        const tag=document.createElement('div'); tag.className='focus-tag'; tag.textContent='FOCUS';
+        th.appendChild(tag);
+      }
+      hr.appendChild(th);
+    }
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    tracks.forEach(t=>{
+      const feats=featuresOf(t.id);
+      // track group header row
+      const theadG=document.createElement('tbody');
+      const trH=document.createElement('tr');
+      trH.className='track-head';
+      const tdLabel=document.createElement('td');
+      tdLabel.className='label-col';
+      const done=feats.filter(f=>featureDone(f.id)).length;
+      tdLabel.innerHTML=`<div class="track-head-inner">
+          <span class="track-dot" style="background:${trackColor(t.id)}"></span>
+          <span class="track-name">${t.name}</span>
+          <span class="track-meta">${feats.length} feat</span>
+        </div>`;
+      trH.appendChild(tdLabel);
+      // progress cell spanning the sprint columns
+      const tdProg=document.createElement('td');
+      tdProg.colSpan=state.sprintCount;
+      const pct= feats.length? Math.round(done/feats.length*100):0;
+      // stage distribution for focus sprint
+      const c=countsForSprint(feats, state.selectedSprint);
+      const segTotal=feats.length||1;
+      let bars='';
+      [[1,'var(--grey)'],[2,'var(--navy)'],[3,'var(--cyan)'],[4,'var(--green)']].forEach(([s,col])=>{
+        const w=(c[s]/segTotal)*100;
+        if(w>0) bars+=`<div class="tp-seg" style="width:${w}%;background:${col}"></div>`;
+      });
+      tdProg.innerHTML=`<div class="track-progress">
+          <span class="track-meta">S${state.selectedSprint+1}:</span>
+          <div class="tp-bar">${bars}</div>
+          <span class="tp-pct">${pct}% shipped</span>
+        </div>`;
+      trH.appendChild(tdProg);
+      theadG.appendChild(trH);
+      table.appendChild(theadG);
+
+      // feature rows
+      const tbody=document.createElement('tbody');
+      tbody.className='track-body';
+      feats.forEach(f=>{
+        const tr=document.createElement('tr');
+        const ltd=document.createElement('td');
+        ltd.className='label-col';
+        const row=document.createElement('div'); row.className='feat-row';
+        const inp=document.createElement('input');
+        inp.className='feat-name'; inp.value=f.name;
+        inp.addEventListener('change',()=>renameFeature(f.id, inp.value.trim()||f.name));
+        const rm=document.createElement('button');
+        rm.className='remove-feat'; rm.textContent='✕'; rm.title='Remove feature';
+        rm.onclick=()=>removeFeature(f.id);
+        row.appendChild(inp); row.appendChild(rm);
+        ltd.appendChild(row); tr.appendChild(ltd);
+        for(let si=0; si<state.sprintCount; si++){
+          const td=document.createElement('td');
+          if(si===state.selectedSprint) td.classList.add('focus-col');
+          const v=stageInSprint(f.id,si);
+          const slipped=isSlipped(f.id,si);
+          const wrap=document.createElement('div');
+          wrap.className='cell-wrap';
+          const cell=document.createElement('div');
+          cell.className='cell s'+v+(slipped?' amber':'');
+          cell.title = slipped
+            ? 'S'+(si+1)+' — Slipped in from a previous sprint (now '+STAGE_NAMES[v]+') — click to clear'
+            : 'S'+(si+1)+' — '+STAGE_NAMES[v]+' (click to change)';
+          cell.onclick=()=>cycleStage(f.id, si);
+          wrap.appendChild(cell);
+          if(v>0){
+            const slipBtn=document.createElement('div');
+            slipBtn.className='slip-btn';
+            slipBtn.textContent='»';
+            slipBtn.title='Slipped — push to Sprint '+(si+2)+' (turns amber)';
+            slipBtn.onclick=(e)=>{ e.stopPropagation(); slipToNextSprint(f.id, si); };
+            wrap.appendChild(slipBtn);
+          }
+          td.appendChild(wrap); tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+      // add-feature row
+      const addTr=document.createElement('tr');
+      addTr.className='add-feat-row';
+      const addTd=document.createElement('td');
+      addTd.colSpan=state.sprintCount+1;
+      const addBtn=document.createElement('button');
+      addBtn.className='add-feat-btn';
+      addBtn.textContent='+ Add feature to '+t.name;
+      addBtn.onclick=()=>addFeature(t.id);
+      addTd.appendChild(addBtn);
+      addTr.appendChild(addTd);
+      tbody.appendChild(addTr);
+      table.appendChild(tbody);
+    });
+
+    wrap.innerHTML="";
+    scroll.appendChild(table);
+    wrap.appendChild(scroll);
+  }
+
+  // ---------- board ----------
+  function renderBoard(){
+    const wrap=document.getElementById('content');
+    wrap.innerHTML="";
+    const si=state.selectedSprint;
+
+    const head=document.createElement('div');
+    head.className='board-head';
+    const scopeName = state.activeTrack==='all' ? 'All tracks' : trackName(state.activeTrack);
+    head.textContent=`Sprint ${si+1} board · ${scopeName}`;
+    wrap.appendChild(head);
+
+    const pool = state.activeTrack==='all' ? state.features : featuresOf(state.activeTrack);
+
+    const board=document.createElement('div');
+    board.className='board';
+    const cols=[
+      {key:1,title:'Wireframe',color:'var(--grey)'},
+      {key:2,title:'Development',color:'var(--navy)'},
+      {key:3,title:'Testing',color:'var(--cyan)'},
+      {key:4,title:'Done',color:'var(--green)'},
+    ];
+    const scheduled=new Set();
+    cols.forEach(col=>{
+      const cdiv=document.createElement('div');
+      cdiv.className='col c'+col.key;
+      const ch=document.createElement('div'); ch.className='col-head';
+      const ic=document.createElement('div'); ic.className='icon-circle'; ic.style.background=col.color; ic.innerHTML=ICONS[col.key];
+      const ct=document.createElement('div'); ct.className='col-title'; ct.textContent=col.title;
+      const cc=document.createElement('div'); cc.className='col-count'; cc.style.background=col.color;
+      const feats=pool.filter(f=>stageInSprint(f.id,si)===col.key);
+      feats.forEach(f=>scheduled.add(f.id));
+      cc.textContent=feats.length;
+      ch.appendChild(ic); ch.appendChild(ct); ch.appendChild(cc);
+      cdiv.appendChild(ch);
+      if(feats.length===0){
+        const e=document.createElement('div'); e.className='col-empty'; e.textContent='—';
+        cdiv.appendChild(e);
+      }
+      // drop zone behaviour for this column
+      cdiv.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; cdiv.classList.add('drag-over'); });
+      cdiv.addEventListener('dragleave', ()=>{ cdiv.classList.remove('drag-over'); });
+      cdiv.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        cdiv.classList.remove('drag-over');
+        const fid = e.dataTransfer.getData('text/plain');
+        if(fid) setStage(fid, si, col.key);
+      });
+      feats.forEach(f=>{
+        const slipped=isSlipped(f.id, si);
+        const card=document.createElement('div');
+        card.className='feat-card'+(slipped?' amber-card':'');
+        card.style.borderLeftColor= slipped ? 'var(--amber)' : col.color;
+        card.title='Drag to another column, or click to advance its stage';
+        card.draggable = true;
+        card.addEventListener('dragstart', (e)=>{
+          e.dataTransfer.setData('text/plain', f.id);
+          e.dataTransfer.effectAllowed='move';
+          card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+        card.onclick=()=>cycleStage(f.id, si);
+        const top=document.createElement('div'); top.className='fc-top';
+        const nm=document.createElement('span'); nm.className='fc-name'; nm.textContent=f.name;
+        const adv=document.createElement('span'); adv.className='fc-adv'; adv.textContent= col.key<4?'→':'↻';
+        top.appendChild(nm); top.appendChild(adv);
+        card.appendChild(top);
+        const tags=document.createElement('div'); tags.className='fc-tags';
+        if(state.activeTrack==='all'){
+          const tk=document.createElement('span');
+          tk.className='fc-track';
+          tk.textContent=trackName(f.trackId);
+          tk.style.background=trackColor(f.trackId)+'22';
+          tk.style.color=trackColor(f.trackId);
+          tags.appendChild(tk);
+        }
+        if(slipped){
+          const st=document.createElement('span');
+          st.className='fc-slipped-tag';
+          st.textContent='SLIPPED';
+          tags.appendChild(st);
+        }
+        const slipBtn=document.createElement('button');
+        slipBtn.className='fc-slip-btn';
+        slipBtn.textContent='Slip →';
+        slipBtn.title='Push this feature to Sprint '+(si+2)+' and flag it amber';
+        slipBtn.onclick=(e)=>{ e.stopPropagation(); slipToNextSprint(f.id, si); };
+        tags.appendChild(slipBtn);
+        card.appendChild(tags);
+        cdiv.appendChild(card);
+      });
+      board.appendChild(cdiv);
+    });
+    wrap.appendChild(board);
+
+    // unscheduled for this sprint
+    const uns=pool.filter(f=>!scheduled.has(f.id));
+    const u=document.createElement('div'); u.className='unscheduled';
+    const ut=document.createElement('div'); ut.className='unsched-title';
+    ut.textContent=`Not in Sprint ${si+1} yet (${uns.length})`;
+    u.appendChild(ut);
+    if(uns.length===0){
+      const a=document.createElement('div'); a.className='all-sched';
+      a.textContent= pool.length? 'Every feature in scope has a stage this sprint.' : 'No features in scope — add one from the Roadmap view.';
+      u.appendChild(a);
+    } else {
+      const cr=document.createElement('div'); cr.className='chip-row';
+      uns.forEach(f=>{
+        const chip=document.createElement('div'); chip.className='chip';
+        chip.draggable = true;
+        chip.title='Drag into a column, or use + to add to Wireframe';
+        chip.addEventListener('dragstart', (e)=>{
+          e.dataTransfer.setData('text/plain', f.id);
+          e.dataTransfer.effectAllowed='move';
+          chip.classList.add('dragging');
+        });
+        chip.addEventListener('dragend', ()=> chip.classList.remove('dragging'));
+        chip.innerHTML=`<span class="chip-dot" style="background:${trackColor(f.trackId)}"></span><span>${f.name}</span>`;
+        const b=document.createElement('button'); b.textContent='+'; b.title='Add to Wireframe this sprint';
+        b.onclick=()=>setStage(f.id, si, 1);
+        chip.appendChild(b);
+        cr.appendChild(chip);
+      });
+      u.appendChild(cr);
+    }
+    wrap.appendChild(u);
+  }
+
+  function render(){
+    renderProgress();
+    renderTrackSeg();
+    renderViewSeg();
+    renderSprintSeg();
+    renderLegendHint();
+    if(state.view==='roadmap') renderRoadmap(); else renderBoard();
+  }
+
+  document.getElementById('addSprintBtn').onclick=addSprint;
+  document.getElementById('addTrackBtn').onclick=addTrack;
+
+  async function init(){
+    const loaded=await loadState();
+    state=loaded||defaultState();
+    if(state.selectedSprint>=state.sprintCount) state.selectedSprint=state.sprintCount-1;
+    await saveState();
+    render();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
